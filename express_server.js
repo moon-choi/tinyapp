@@ -3,6 +3,7 @@ const app = express();
 const PORT = 8080;
 
 app.set("view engine", "ejs");
+//EJS automatically knows to look inside the views directory for any template files that have the extension .ejs. This means we don't need to tell it where to find them. It also means that we do not need to include the extension of the filename when referencing it.
 
 const urlDatabase = {
   b2xVn2: "http://www.lighthouselabs.ca",
@@ -11,6 +12,11 @@ const urlDatabase = {
 
 app.get("/", (req, res) => {
   res.send("Hello!");
+});
+
+app.get("/urls", (req, res) => {
+  const templateVars = { urls: urlDatabase };
+  res.render("urls_index", templateVars);
 });
 
 app.get("/urls.json", (req, res) => {
