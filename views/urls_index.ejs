@@ -37,6 +37,7 @@
             <td><%= urls[url] %></td>
             <!-- this is longURL -->
             <td>
+              <!-- form is only for GET, POST -->
               <form method="POST" action="/urls/<%= url %>/delete">
                 <button type="submit" class="btn btn-primary">Delete</button>
               </form>
