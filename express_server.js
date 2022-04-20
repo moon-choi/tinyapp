@@ -27,7 +27,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  const templateVars = { urls: urlDatabase, name: "?" };
   res.render("urls_index", templateVars); //brining the files in partials
 });
 
@@ -69,6 +69,7 @@ app.post("/urls", (req, res) => {
     shortURL: shortURL,
     longURL: urlDatabase[shortURL], //saving it to the DB.
   };
+  //JC did redirect.
   res.render("urls_show", templateVars); //after mathching keys are found in the .ejs file, then it shows the values. (Rendering)
   //rendering means getting the page displayed with the values.
   // alligator: interpretes dynamic values.
@@ -94,20 +95,21 @@ app.post("/urls/:shortURL/edit", (req, res) => {
 
 app.post("/login", (req, res) => {
   const username = req.body.username; //got from the form
-  res.cookie("cookie", username); //sets the cookie always singular .. setting only one cookie at a time.
+  res.cookie("cookie", username); //sets the cookie always singular .. setting only one cookie at a time.`
   // console.log("getcookie", req.cookies["cookie"]);
   const templateVars = {
-    nameEJS: req.cookies["cookie"], //gets all the cookies
+    name: req.cookies["cookie"], //gets all the cookies
     urls: urlDatabase,
   };
+ç
+  //JC did res.redirect("/urls")
   res.render("urls_index", templateVars);
 });
 
-// app.post("/logout", (req, res) => {
-//   const username = req.body.username; //got from the form
-//   res.cookie("cookie", username);
-//   res.redirect("/urls/");
-// });
+app.post("/logout", (req, res) => {
+  res.clearCookie("cookie");
+  res.redirect("/urls/");
+});
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
