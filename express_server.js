@@ -14,6 +14,19 @@ const urlDatabase = {
   b2xVn2: "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com",
 };
+//global users object
+const users = {
+  userRandomID: {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur",
+  },
+  user2RandomID: {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk",
+  },
+};
 
 const generateRandomString = function () {
   const str = Math.random().toString(36).slice(7);
@@ -27,7 +40,15 @@ app.get("/", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase, name: req.cookies["cookie"] };
+  const userID = req.cookies["user_id"];
+  const loggedUser = users[userID];
+  // console.log("loggedUser", loggedUser);
+  // console.log("userID", userID);
+  const templateVars = {
+    urls: urlDatabase,
+    // name: req.cookies["user_name"],
+    user: loggedUser,
+  };
   res.render("urls_index", templateVars); //brining the files in partials
 });
 
@@ -37,7 +58,8 @@ app.get("/urls.json", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   const templateVars = {
-    name: req.cookies["cookie"],
+    name: req.cookies["user_name"],
+    user: users.id,
   };
   res.render("urls_new", templateVars);
 });
@@ -47,7 +69,8 @@ app.get("/urls/:shortURL", (req, res) => {
   const templateVars = {
     shortURL: shortURL,
     longURL: urlDatabase[shortURL],
-    name: req.cookies["cookie"],
+    name: req.cookies["user_name"],
+    user: users.id,
   };
   res.render("urls_show", templateVars);
 });
@@ -60,7 +83,41 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 
+//do i need this?
+// app.get("/login", (req, res) => {
+//   const templateVars = {
+//     name: req.cookies["user_name"],
+//   };
+//   res.render("urls_index", templateVars);
+// });
+
+app.get("/register", (req, res) => {
+  // const res.cookie["user_id"]
+  const templateVars = {
+    name: req.cookies["user_name"],
+    user: users.id,
+  };
+  res.render("urls_register", templateVars);
+});
+
 //================POST====================///
+
+app.post("/register", (req, res) => {
+  // res.status(404).send(); //temporary error page  before building
+  console.log(req.body);
+  const id = generateRandomString();
+  const email = req.body.email;
+  const password = req.body.password;
+
+  const user = {
+    id: id,
+    email: email,
+    password: password,
+  };
+  users[id] = user; //should add a user to the global users object.
+  res.cookie("user_id", id); //set cookie with the id.
+  res.redirect("/urls");
+});
 
 //in urls_new.ejs
 //actions: /urls
@@ -72,7 +129,8 @@ app.post("/urls", (req, res) => {
     //we need to pass it to 69.
     shortURL: shortURL,
     longURL: urlDatabase[shortURL], //saving it to the DB.
-    name: req.cookies["cookie"],
+    name: req.cookies["user_name"],
+    user: users.id,
   };
   //JC did redirect.
   res.render("urls_show", templateVars); //after mathching keys are found in the .ejs file, then it shows the values. (Rendering)
@@ -82,7 +140,8 @@ app.post("/urls", (req, res) => {
 
 app.post("/urls/new", (req, res) => {
   const templateVars = {
-    name: req.cookies["cookie"],
+    name: req.cookies["user_name"],
+    user: users.id,
   };
   res.render("urls_new", templateVars);
 });
@@ -103,23 +162,13 @@ app.post("/urls/:shortURL/edit", (req, res) => {
 
 app.post("/login", (req, res) => {
   const username = req.body.nameEJS; //got from the form
-  res.cookie("cookie", username); //sets the cookie always singular .. setting only one cookie at a time.`
-  // console.log("getcookie", req.cookies["cookie"]);
-  const templateVars = {
-    name: req.cookies["cookie"], //gets all the cookies
-    urls: urlDatabase,
-  };
-  //JC did res.redirect("/urls")
-  console.log("username", username);
-
-  console.log("req.cookies", req.cookies);
-  console.log(templateVars);
-
-  res.render("urls_index", templateVars);
+  res.cookie("user_name", username); //sets the cookie always singular .. setting only one cookie at a time.`
+  // console.log("getcookie", req.cookies["user_name"]);
+  res.redirect("/urls");
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("cookie");
+  res.clearCookie("user_name");
   res.redirect("/urls/");
 });
 

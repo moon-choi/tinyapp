@@ -20,8 +20,12 @@
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
       <div class="navbar-login">
-        <!--  -->
-        <% if (name === undefined) { %>
+        <% if (user) { %>
+        <label>Logged in as: <%= user.email %></label>
+        <form method="POST" action="/logout">
+          <button type="submit" class="btn btn-primary">Logout</button>
+        </form>
+        <% } else { %>
         <form method="POST" action="/login">
           <input
             class="form-control"
@@ -32,14 +36,8 @@
           />
           <button type="submit" class="btn btn-primary">Login</button>
         </form>
-
-        <!--  -->
-        <% } else { %>
-        <form method="POST" action="/logout">
-          <label>Logged in as: <%= name %></label>
-
-          <!-- <label for="logout">You are logged out.</label> -->
-          <button type="submit" class="btn btn-primary">Logout</button>
+        <form method="GET" action="/register">
+          <button type="submit" class="btn btn-primary">Register</button>
         </form>
         <% } %>
       </div>
