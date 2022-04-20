@@ -20,26 +20,24 @@
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
       <div class="navbar-login">
-        <% if (!name) { %>
-          <form method="POST" action="/login">
-          <label for="name">Logged in as: <%= name %></label>
+        <!--  -->
+        <% if (name === undefined) { %>
+        <form method="POST" action="/login">
           <input
             class="form-control"
             type="text"
-            name="name"
-            placeholder="username"
+            name="nameEJS"
+            placeholder="Please type your username"
             style="width: 300px; margin: 1em"
           />
           <button type="submit" class="btn btn-primary">Login</button>
         </form>
-        <form method="POST" action="/logout">
-          <!-- <label for="logout">You are logged out.</label> -->
-          <button type="submit" class="btn btn-primary">Logout</button>
-        </form>
 
+        <!--  -->
         <% } else { %>
-           </form>
         <form method="POST" action="/logout">
+          <label>Logged in as: <%= name %></label>
+
           <!-- <label for="logout">You are logged out.</label> -->
           <button type="submit" class="btn btn-primary">Logout</button>
         </form>

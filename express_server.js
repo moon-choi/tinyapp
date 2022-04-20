@@ -27,7 +27,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase, name: "?" };
+  const templateVars = { urls: urlDatabase, name: req.cookies["cookie"] };
   res.render("urls_index", templateVars); //brining the files in partials
 });
 
@@ -36,7 +36,10 @@ app.get("/urls.json", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  const templateVars = {
+    name: req.cookies["cookie"],
+  };
+  res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:shortURL", (req, res) => {
@@ -44,6 +47,7 @@ app.get("/urls/:shortURL", (req, res) => {
   const templateVars = {
     shortURL: shortURL,
     longURL: urlDatabase[shortURL],
+    name: req.cookies["cookie"],
   };
   res.render("urls_show", templateVars);
 });
@@ -68,6 +72,7 @@ app.post("/urls", (req, res) => {
     //we need to pass it to 69.
     shortURL: shortURL,
     longURL: urlDatabase[shortURL], //saving it to the DB.
+    name: req.cookies["cookie"],
   };
   //JC did redirect.
   res.render("urls_show", templateVars); //after mathching keys are found in the .ejs file, then it shows the values. (Rendering)
@@ -76,7 +81,10 @@ app.post("/urls", (req, res) => {
 });
 
 app.post("/urls/new", (req, res) => {
-  res.render("urls_new");
+  const templateVars = {
+    name: req.cookies["cookie"],
+  };
+  res.render("urls_new", templateVars);
 });
 
 //wildcard is :shortURL
@@ -94,15 +102,19 @@ app.post("/urls/:shortURL/edit", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  const username = req.body.username; //got from the form
+  const username = req.body.nameEJS; //got from the form
   res.cookie("cookie", username); //sets the cookie always singular .. setting only one cookie at a time.`
   // console.log("getcookie", req.cookies["cookie"]);
   const templateVars = {
     name: req.cookies["cookie"], //gets all the cookies
     urls: urlDatabase,
   };
-ç
   //JC did res.redirect("/urls")
+  console.log("username", username);
+
+  console.log("req.cookies", req.cookies);
+  console.log(templateVars);
+
   res.render("urls_index", templateVars);
 });
 
