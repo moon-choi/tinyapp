@@ -28,11 +28,19 @@ const users = {
   },
 };
 
+//=============HELPER FUNCTIONS================//
 const generateRandomString = function () {
   const str = Math.random().toString(36).slice(7);
   return str;
 };
 
+const emailAlreadyExists = function (email) {
+  for (const userId in users) {
+    const user = users[userId];
+    // const email = users[userId][email];
+    return user.email === email; //this will return true or false.
+  }
+};
 //================GET====================///
 
 app.get("/", (req, res) => {
@@ -104,19 +112,30 @@ app.get("/register", (req, res) => {
 
 app.post("/register", (req, res) => {
   // res.status(404).send(); //temporary error page  before building
-  console.log(req.body);
-  const id = generateRandomString();
   const email = req.body.email;
   const password = req.body.password;
+  // check if email or password are falsey
+  if (!email || !password) {
+    return res.status(400).send("please enter an email address and a password");
+  }
 
+  if (emailAlreadyExists(email)) {
+    // return res.sendStatus(400, "email already exists");
+    return res.status(400).send("jordan");
+  }
+
+  const id = generateRandomString();
   const user = {
     id: id,
     email: email,
     password: password,
   };
+
   users[id] = user; //should add a user to the global users object.
   res.cookie("user_id", id); //set cookie with the id.
   res.redirect("/urls");
+
+  console.log(users);
 });
 
 //in urls_new.ejs
