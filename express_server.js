@@ -1,11 +1,17 @@
 const express = require("express");
 // const cookieParser = require("cookie-parser");
 const app = express();
-const PORT = 8080;
+const PORT = 8081;
 const bodyParser = require("body-parser");
 const bcrypt = require("bcryptjs");
 const cookieSession = require("cookie-session");
-const { getUserByEmail } = require("./helpers.js");
+const {
+  getUserByEmail,
+  generateRandomString,
+  userExistsByID,
+  passwordMatches,
+  urlsForUser,
+} = require("./helpers.js");
 app.use(
   cookieSession({
     name: "session",
@@ -26,6 +32,10 @@ const urlDB = {
   i3BoGr: {
     longURL: "https://www.google.ca",
     userID: "aJ48lW",
+  },
+  d0hxlcl: {
+    longURL: "http://www.facebook.com",
+    userID: "userBrandomID",
   },
 };
 
@@ -52,47 +62,14 @@ const users = {
   },
 };
 
-//=============HELPER FUNCTIONS================//
-const generateRandomString = function () {
-  const str = Math.random().toString(36).slice(7);
-  return str;
-};
-
-const userExistsByID = function (id) {
-  for (const userId in users) {
-    if (userId === id) {
-      return true;
-    }
-  }
-  return false;
-};
-
-const passwordMatches = function (password) {
-  for (const userId in users) {
-    const user = users[userId];
-    if (user.password === password) {
-      return true;
-    }
-  }
-  return false;
-};
-
-const urlsForUser = function (id) {
-  let userURLs = {}; //shortURL, longURL, userID
-  for (const url in urlDB) {
-    if (urlDB[url]["userID"] === id) {
-      userURLs[url] = urlDB[url]; //we need key-value pair.
-      //key: url   //value: urlDB[url]
-    }
-  }
-  // console.log("OBJECT", userURLs);
-  return userURLs;
-};
-
 //================GET====================///
 
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  const userID = req.session.user_id;
+  if (!userExistsByID(userID, users)) {
+    res.redirect("/login");
+  }
+  res.redirect("/urls");
 });
 
 app.get("/login", (req, res) => {
@@ -102,7 +79,7 @@ app.get("/login", (req, res) => {
     urls: urlDB, //this is used in urls_index.ejs
     user: currentUser,
   };
-  if (userExistsByID(userID)) {
+  if (userExistsByID(userID, users)) {
     res.redirect("/urls");
   }
   res.render("urls_login", templateVars);
@@ -121,12 +98,12 @@ app.get("/register", (req, res) => {
 app.get("/urls", (req, res) => {
   const userID = req.session.user_id;
   const currentUser = users[userID];
-  if (!userExistsByID(userID)) {
+  if (!userExistsByID(userID, users)) {
     //if user is not logged in they can't access urls.
     return res.status(401).send("Please login first."); //header has already been sent so i can't call res.redirect again.
   }
   const currentUserID = currentUser["id"];
-  const userURLs = urlsForUser(currentUserID);
+  const userURLs = urlsForUser(currentUserID, urlDB);
   const templateVars = {
     urls: userURLs,
     user: currentUser,
@@ -141,10 +118,10 @@ app.get("/urls/new", (req, res) => {
   const templateVars = {
     user: currentUser,
   };
-  if (!userExistsByID(userID)) {
+  if (!userExistsByID(userID, users)) {
     return res.redirect("/login");
   }
-  res.render("urls_new", templateVars); ///store the newly creted url in the url database.
+  res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:shortURL", (req, res) => {
@@ -156,7 +133,7 @@ app.get("/urls/:shortURL", (req, res) => {
   }
   const currentUser = users[userID];
   const currentUserID = currentUser["id"];
-  const userURLs = urlsForUser(currentUserID);
+  const userURLs = urlsForUser(currentUserID, urlDB);
 
   const templateVars = {
     //need to be below if statement.
@@ -225,6 +202,10 @@ app.post("/urls", (req, res) => {
     longURL: urlDB[shortURL].longURL, //saving it to the DB.
     user: currentUser,
   };
+
+  if (!userExistsByID(userID, users)) {
+    res.send("You have to login first to acces this page.");
+  }
   //JC did redirect.
   res.render("urls_show", templateVars); //after mathching keys are found in the .ejs file, then it shows the values. (Rendering)
   //rendering means getting the page displayed with the values.
@@ -235,14 +216,24 @@ app.post("/urls/new", (req, res) => {
   const userID = req.session.user_id;
   const longURL = req.body.longURL; //body inside the post request, pull the 'longURL' info.
   const shortURL = generateRandomString(); //abcde.
-  if (!userExistsByID(userID)) {
+  if (!userExistsByID(userID, users)) {
     res.send("You have to login first to shorten URLS.");
-    res.redirect("/login");
   }
   urlDB[shortURL] = { longURL: longURL, userID: userID };
+
+  const currentUser = users[userID];
+  const currentUserID = currentUser["id"];
+  const userURLs = urlsForUser(currentUserID, urlDB);
+
+  const templateVars = {
+    //need to be below if statement.
+    shortURL: shortURL,
+    longURL: urlDB[shortURL].longURL,
+    user: currentUser,
+    urls: userURLs,
+  };
   //****** adding the short url, long url, and user id to the data base
-  console.log(urlDB);
-  res.redirect("/urls");
+  res.render("urls_show", templateVars);
 });
 
 //wildcard is :shortURL
